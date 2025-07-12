@@ -185,7 +185,7 @@ class ArticleListScreen(Screen):
         status_label = self.query_one("#status_label", Label)
         status_label.update(message)
         # Clear message after 3 seconds
-        self.set_timer(3.0, lambda: status_label.update("j/k=navigate, enter/o=open, r=read, s=star, q=quit"))
+        self.set_timer(3.0, lambda: status_label.update(""))
     
     def _refresh_article_status(self, entry: Entry) -> None:
         """Refresh the status of a specific article in the table."""
