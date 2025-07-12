@@ -1,0 +1,68 @@
+/* Wallabag TUI Styles */
+
+/* Main container */
+#main_container {
+    height: 100%;
+}
+
+/* Article list table */
+#articles_table {
+    height: 100%;
+}
+
+#articles_table .datatable--header {
+    background: $accent;
+    color: $text;
+}
+
+#articles_table .datatable--cursor {
+    background: $accent 50%;
+    color: $text;
+}
+
+/* Article view */
+#article_container {
+    height: 100%;
+    padding: 1;
+}
+
+#article_title {
+    margin: 1 0;
+    color: $accent;
+}
+
+#article_url {
+    color: $text-muted;
+    margin: 0 0 1 0;
+}
+
+#article_meta {
+    color: $text-muted;
+    margin: 0 0 1 0;
+}
+
+#separator {
+    color: $text-muted;
+    margin: 0 0 1 0;
+}
+
+#content_scroll {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#article_content {
+    padding: 1;
+}
+
+/* Status bar and footer */
+Footer {
+    background: $accent-darken-1;
+    color: $text;
+}
+
+Header {
+    background: $accent;
+    color: $text;
+}
