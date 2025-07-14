@@ -24,20 +24,15 @@ setup(
     ],
     python_requires='>=3.6',
 
-    setup_requires=[
-        'pytest-runner==5.1',
-        'setuptools_scm==3.3.3',
-        'wheel',
-    ],
     install_requires=[
-        'beautifulsoup4>=4.9.1',
-        'pycryptodome>=3.9.8',
-        'requests>=2.11.1',
-        'click>=8.0',
+        'beautifulsoup4',
+        'pycryptodome',
+        'requests',
+        'click',
         'yaspin',
-        'click_repl>=0.2.0',
+        'click_repl',
         'pyxdg',
-        'colorama>=0.4.3',
+        'colorama',
         'delorean',
         'humanize',
         'lxml',
@@ -45,10 +40,10 @@ setup(
         'tabulate',
         'packaging',
         'markdownify',
-        'textual>=0.44.0',
+        'textual',
     ],
     tests_require=[
-        'pytest==4.6.3',
+        'pytest',
     ],
 
     entry_points='''
