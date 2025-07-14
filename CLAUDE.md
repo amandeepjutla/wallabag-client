@@ -130,7 +130,7 @@ src/wallabag/
 ```
 
 ### Dependencies
-- **textual**: Modern TUI framework (≥0.44.0)
+- **textual**: Modern TUI framework (≥0.44.0) - **ADDED TO SETUP.PY**
 - **All existing deps**: Maintained for backward compatibility
 
 ### Key Technical Solutions
@@ -138,6 +138,8 @@ src/wallabag/
 2. **Table Cell Updates**: Implemented proper row/column key mapping using `table.rows.keys()` and `table.columns.keys()` for reliable cell updates
 3. **CSS Loading**: Disabled CSS with `CSS = ""` and `CSS_PATH = None` to avoid package inclusion issues
 4. **API Integration**: Seamless integration with existing UpdateEntry API for real-time status changes
+5. **Configuration Validation**: Added helpful warning message when TUI is run without proper wallabag configuration
+6. **Entry Point Management**: Proper setup.py configuration with textual dependency for reliable installation
 
 ### Testing Commands
 ```bash
@@ -156,6 +158,8 @@ wallabag-tui
 - ✅ Article content view complete with scrolling
 - ✅ DataTable key binding conflicts resolved
 - ✅ Table cell update errors fixed
+- ✅ Entry point installation issues resolved
+- ✅ Configuration warning message added for first-time users
 
 ## Development Guidelines
 
@@ -170,16 +174,25 @@ When working on this project:
 ## Commands for Development
 
 ```bash
-# Development install
+# Development install (run after any code changes)
 pip install -e .
 
 # Test both commands
 wallabag --help
 wallabag-tui --help
 
+# Setup wallabag configuration (required for TUI)
+wallabag config
+
 # Run linting (if available)
 # Command not determined yet - check project for existing lint setup
 ```
+
+## Important Notes for Development
+
+1. **After Code Changes**: Always run `pip install -e .` after modifying source code to refresh entry points
+2. **Configuration Required**: The TUI requires wallabag configuration. Run `wallabag config` first
+3. **Dependencies**: The textual dependency is now included in setup.py and will be installed automatically
 
 ---
 

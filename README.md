@@ -1,5 +1,3 @@
-![badge](https://action-badges.now.sh/artur-shaik/wallabag-client) [![codecov](https://codecov.io/gh/artur-shaik/wallabag-client/branch/master/graph/badge.svg?token=INPHCV9VDO)](https://codecov.io/gh/artur-shaik/wallabag-client) [![PyPI version shields.io](https://img.shields.io/pypi/v/wallabag-client.svg)](https://pypi.python.org/pypi/wallabag-client/)
-
 # wallabag-client
 
 Wallabag-client is a command line client for the self hosted read-it-later app [wallabag](https://www.wallabag.org/). Unlike to other services, wallabag is free and open source.
@@ -8,10 +6,43 @@ Wallabag-client is refactored version of existed wallabag-cli tool.
 
 You can read additional info [here](https://shaik.link/wallabag-client-features.html)
 
+## Terminal user interface
+
+This fork adds a rudimentary TUI. Navigate with `j` and  `k,' press `o` to open an article, and toggle read/star status with `r` and `s`. Both the original CLI (`wallabag`) and new TUI (`wallabag-tui`) are available
+
+### Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/amandeepjutla/wallabag-client.git
+cd wallabag-client
+pip install -e .
+
+# Configure wallabag (required for both CLI and TUI)
+wallabag config
+
+# Use the original CLI
+wallabag list
+
+# Use the new TUI
+wallabag-tui
+```
+
+### TUI Key Bindings
+
+- `j/k` or `↑/↓` - Navigate article list
+- `Enter` or `o` - Read selected article
+- `r` - Toggle read status
+- `s` - Toggle star status
+- `q` - Quit/Back
+- `Page Up/Down` - Scroll article content
+- `Home/End` - Jump to top/bottom of article
+
 --------------------------------------------------------------------------------
 
 ## Features
 
+### Command Line Interface (CLI)
 - List entries (filterable tabulated output with nerd icons);
 - Show the content of an entry with custom width and alignment;
 - Add new entries;
@@ -25,11 +56,30 @@ You can read additional info [here](https://shaik.link/wallabag-client-features.
 - Showing entry information;
 - Export entry to file.
 
+### Terminal User Interface (TUI) - New!
+- Interactive article browsing with pine-style navigation;
+- Real-time article reading with smooth scrolling;
+- Instant read/star status toggles with server sync;
+- Professional interface with status indicators;
+- Keyboard-driven workflow for efficient article management.
+
 ## Installation
 
+### From PyPI (Original version without TUI)
 `sudo pip3 install wallabag-client`
 
+### From Source (With TUI support)
+```bash
+git clone https://github.com/your-username/wallabag-client.git
+cd wallabag-client
+pip install -e .
+```
+
+**Note**: The TUI requires the `textual` dependency which is included in the development installation but not in the PyPI version.
+
 ## Usage
+
+### Command Line Interface (CLI)
 
 `wallabag --help`
 
@@ -61,6 +111,20 @@ Commands:
   update          Toggle the read or starred status or change the title of...
   update-by-tags  Set the read or starred status of an existing entries...
 ```
+
+### Terminal User Interface (TUI)
+
+First, make sure you have configured wallabag:
+```bash
+wallabag config
+```
+
+Then start the TUI:
+```bash
+wallabag-tui
+```
+
+The TUI provides an interactive interface for browsing and reading your wallabag articles. Use the keyboard shortcuts listed above to navigate and manage your articles efficiently.
 
 ## Install shell completion (zsh)
 
