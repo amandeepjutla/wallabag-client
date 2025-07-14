@@ -346,7 +346,19 @@ class WallabagTUI(App):
     def on_mount(self) -> None:
         """Load articles on startup."""
         if not self.config.is_valid():
-            self.exit(1, "Invalid configuration. Please run 'wallabag config' first.")
+            print("\n" + "="*60)
+            print("  WALLABAG CONFIGURATION REQUIRED")
+            print("="*60)
+            print("\nThe wallabag client is not configured yet.")
+            print("Please run the following command to set up your wallabag connection:")
+            print("\n  wallabag config")
+            print("\nThis will guide you through setting up:")
+            print("  • Wallabag server URL")
+            print("  • Client ID and secret")
+            print("  • Username and password")
+            print("\nAfter configuration, you can run 'wallabag-tui' again.")
+            print("="*60 + "\n")
+            self.exit(1)
             return
         
         self._load_articles()

@@ -43,6 +43,7 @@ setup(
         'tabulate',
         'packaging',
         'markdownify',
+        'textual>=0.44.0',
     ],
     tests_require=[
         'pytest==4.6.3',
@@ -51,5 +52,6 @@ setup(
     entry_points='''
         [console_scripts]
         wallabag=wallabag.wallabag:cli
+        wallabag-tui=wallabag.tui:main
     '''
 )
