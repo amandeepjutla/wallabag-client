@@ -8,8 +8,6 @@ setup(
     use_scm_version=True,
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    package_data={'wallabag': ['*.css']},
-    include_package_data=True,
     url='https://github.com/artur-shaik/wallabag-client',
     author='Artur Shaik',
     author_email='artur@shaik.link',
@@ -24,15 +22,20 @@ setup(
     ],
     python_requires='>=3.6',
 
+    setup_requires=[
+        'pytest-runner==5.1',
+        'setuptools_scm==3.3.3',
+        'wheel',
+    ],
     install_requires=[
-        'beautifulsoup4',
-        'pycryptodome',
-        'requests',
-        'click',
+        'beautifulsoup4>=4.9.1',
+        'pycryptodome>=3.9.8',
+        'requests>=2.11.1',
+        'click>=8.0',
         'yaspin',
-        'click_repl',
+        'click_repl>=0.2.0',
         'pyxdg',
-        'colorama',
+        'colorama>=0.4.3',
         'delorean',
         'humanize',
         'lxml',
@@ -40,15 +43,13 @@ setup(
         'tabulate',
         'packaging',
         'markdownify',
-        'textual',
     ],
     tests_require=[
-        'pytest',
+        'pytest==4.6.3',
     ],
 
     entry_points='''
         [console_scripts]
         wallabag=wallabag.wallabag:cli
-        wallabag-tui=wallabag.tui:main
     '''
 )
