@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Test compatibility: Kera (GPT-6 Astra)
+# Created: 2026-09-12
 
 from colorama import Fore
 
@@ -57,7 +59,7 @@ class TestInfoCommand():
                 f'{self.f_c}Is read{self.f_rst}: False\n'
                 f'{self.f_c}Is starred{self.f_rst}: True\n'
                 f'{self.f_c}Created at{self.f_rst}: '
-                'Apr 11, 2020, 11:37:45 AM\n'
+                'Apr 11, 2020, 11:37:45\u202fAM\n'
                 f'{self.f_c}Published by{self.f_rst}: Publisher Name\n'
                 f'{self.f_c}Reading time{self.f_rst}: 9 min\n'
                 f'{self.f_c}Preview picture{self.f_rst}: '
@@ -105,7 +107,7 @@ class TestInfoCommand():
                 f'{self.f_c}Is read{self.f_rst}: False\n'
                 f'{self.f_c}Is starred{self.f_rst}: True\n'
                 f'{self.f_c}Created at{self.f_rst}: '
-                'Apr 11, 2020, 11:37:45 AM\n'
+                'Apr 11, 2020, 11:37:45\u202fAM\n'
                 f'{self.f_c}Reading time{self.f_rst}: 9 min\n')
 
     def test_no_id(self):

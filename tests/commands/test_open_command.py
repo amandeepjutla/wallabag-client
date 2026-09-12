@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+# Test portability: Kera (GPT-6 Astra)
+# Created: 2026-09-12
 
 from webbrowser import BaseBrowser
+import pytest
 
 from click.testing import CliRunner
 from wallabag.commands.open import OpenCommand, OpenCommandParams
@@ -17,6 +20,14 @@ def config__is_valid(self):
 class TestOpenCommand():
 
     runner = CliRunner()
+
+    @pytest.fixture(autouse=True)
+    def mock_browser(self, monkeypatch):
+        def get_browser(name):
+            assert name == 'w3m'
+            return BaseBrowser()
+
+        monkeypatch.setattr('wallabag.commands.open.webbrowser.get', get_browser)
 
     def setup_method(self, method):
         self.config = Configs("/tmp/config")

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Kera (GPT-6 Astra)
+# Created: 2026-09-11
+# Revised: 2026-09-12
+# No arguments: reader. With arguments: CLI. --tui: reader options.
+set -euo pipefail
+
+wallabag_project="${WALLABAG_PROJECT:-}"
+if [[ -z "$wallabag_project" ]]; then
+    wallabag_script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -f "$wallabag_script_dir/pixi.toml" ]]; then
+        wallabag_project="$wallabag_script_dir"
+    else
+        wallabag_project="$HOME/Dropbox/tools/wallabag-client"
+    fi
+fi
+
+if [[ $# -eq 0 ]]; then
+    wallabag_command=wallabag-tui
+elif [[ $1 == --tui ]]; then
+    shift
+    wallabag_command=wallabag-tui
+else
+    wallabag_command=wallabag
+    if [[ $1 == --cli ]]; then
+        shift
+    fi
+fi
+
+if [[ ! -f "$wallabag_project/pixi.toml" ]]; then
+    printf 'Wallabag project missing: %s\n' "$wallabag_project/pixi.toml" >&2
+    exit 1
+fi
+if ! command -v pixi >/dev/null 2>&1; then
+    printf 'Wallabag requires Pixi on PATH.\n' >&2
+    exit 127
+fi
+exec pixi run --quiet --manifest-path "$wallabag_project/pixi.toml" \
+    --frozen --executable "$wallabag_command" "$@"

@@ -1,144 +1,115 @@
 # wallabag-client
 
-Wallabag-client is a command line client for the self hosted read-it-later app [wallabag](https://www.wallabag.org/). Unlike to other services, wallabag is free and open source.
+A terminal reader and command-line client for [wallabag](https://wallabag.org/),
+based on [Artur Shaik's client](https://github.com/artur-shaik/wallabag-client)
+with Amandeep Jutla's Textual reader.
 
-Wallabag-client is refactored version of existed wallabag-cli tool.
+README based on the upstream documentation and Amandeep's fork. Local setup
+sections authored by Kera (GPT-6 Astra), created 2026-09-11; README revised for
+Pixi by Kera (GPT-6 Astra) on 2026-09-12.
 
-You can read additional info [here](https://shaik.link/wallabag-client-features.html)
-
-## Terminal user interface
-
-This fork adds a rudimentary TUI. Navigate with `j` and  `k,' press `o` to open an article, and toggle read/star status with `r` and `s`. Both the original CLI (`wallabag`) and new TUI (`wallabag-tui`) are available
-
-### Quick Start
-
-```bash
-# Clone and install
-git clone https://github.com/amandeepjutla/wallabag-client.git
-cd wallabag-client
-pip install -e .
-
-# Configure wallabag (required for both CLI and TUI)
-wallabag config
-
-# Use the original CLI
-wallabag list
-
-# Use the new TUI
-wallabag-tui
-```
-
-### TUI Key Bindings
-
-- `j/k` or `↑/↓` - Navigate article list
-- `Enter` or `o` - Read selected article
-- `r` - Toggle read status
-- `s` - Toggle star status
-- `q` - Quit/Back
-- `Page Up/Down` - Scroll article content
-- `Home/End` - Jump to top/bottom of article
-
---------------------------------------------------------------------------------
-
-## Features
-
-### Command Line Interface (CLI)
-- List entries (filterable tabulated output with nerd icons);
-- Show the content of an entry with custom width and alignment;
-- Add new entries;
-- Delete entries;
-- Mark existing entries as read;
-- Mark existing entries as starred;
-- Change the title of existing entries;
-- Tags support;
-- Annotations support;
-- Opening entries in browser;
-- Showing entry information;
-- Export entry to file.
-
-### Terminal User Interface (TUI) - New!
-- Interactive article browsing with pine-style navigation;
-- Real-time article reading with smooth scrolling;
-- Instant read/star status toggles with server sync;
-- Professional interface with status indicators;
-- Keyboard-driven workflow for efficient article management.
-
-## Installation
-
-### From PyPI (Original version without TUI)
-`sudo pip3 install wallabag-client`
-
-### From Source (With TUI support)
-```bash
-git clone https://github.com/your-username/wallabag-client.git
-cd wallabag-client
-pip install -e .
-```
-
-**Note**: The TUI requires the `textual` dependency which is included in the development installation but not in the PyPI version.
-
-## Usage
-
-### Command Line Interface (CLI)
-
-`wallabag --help`
-
-```
-Usage: wallabag [OPTIONS] COMMAND [ARGS]...
-
-Options:
-  --config TEXT       Use custom configuration file
-  --debug             Enable debug logging to stdout
-  --debug-level TEXT  Debug level
-  --version           Show the version and exit.
-  -h, --help          Show this message and exit.
-
-Commands:
-  add             Add a new entry to wallabag.
-  anno            Annotation commands.
-  config          Start configuration.
-  delete          Delete an entry from wallabag.
-  delete-by-tags  Delete entries from wallabag by tags.
-  export          Export entry to file.
-  info            Get entry information.
-  list            List the entries on the wallabag account.
-  open            Open entry in browser.
-  read            Toggle the read-status of an existing entry.
-  repl            Start an interactive shell.
-  show            Show the text of an entry.
-  star            Toggle the starred-status of an existing entry.
-  tags            Retrieve and print all tags.
-  update          Toggle the read or starred status or change the title of...
-  update-by-tags  Set the read or starred status of an existing entries...
-```
-
-### Terminal User Interface (TUI)
-
-First, make sure you have configured wallabag:
-```bash
-wallabag config
-```
-
-Then start the TUI:
-```bash
-wallabag-tui
-```
-
-The TUI provides an interactive interface for browsing and reading your wallabag articles. Use the keyboard shortcuts listed above to navigate and manage your articles efficiently.
-
-## Install shell completion (zsh)
-
-A completion script for zsh is provided in the directory `completion/zsh/_wallabag`.
-
-Installation can vary based on your zsh settings and environment. Most importantly, the file has to be placed in one of the directories contained in the `$fpath` variable and then autoloaded.
-
-If you want to install the completion script for all users, you can do the following:
+## Use
 
 ```sh
-mkdir -p /usr/local/share/zsh/site-functions
-cp _wallabag /usr/local/share/zsh/site-functions
+wallabag                       # Open the terminal reader
+wallabag list                  # List articles through the CLI
+wallabag --help                # Show CLI commands
+wallabag --cli --version        # Show the installed client version
+wallabag config                # Configure a Wallabag account
+wallabag --tui --config /path/to/config.ini
 ```
 
-and restart zsh.
+With no arguments, the launcher opens the reader. Arguments select the original
+CLI; `--tui` passes options to the reader and `--cli` explicitly selects the CLI.
+The CLI supports adding, listing, reading, starring, tagging, exporting, and
+deleting entries, plus annotations and opening entries in a browser.
 
-A better option is to have a directory in your home for local completion scripts, but setting this up is beyond the scope of these instructions. You may refer to [this answer on Stackoverflow](https://stackoverflow.com/a/67161186) for more details.
+| Key | Reader action |
+| --- | --- |
+| J / K, arrows | Move through the article list |
+| Enter / O | Read the selected article |
+| R | Toggle read status |
+| S | Toggle starred status |
+| Page Up / Page Down | Scroll article text |
+| Home / End | Jump to the beginning or end |
+| Q / Escape | Return from an article |
+| Q | Quit from the article list |
+
+Opening an article marks it read after its content loads successfully. Read and
+star actions synchronize with the server. The reader requires an internet
+connection and a reachable Wallabag API.
+
+## Install or restore with Pixi
+
+The complete project lives in `~/Dropbox/tools/wallabag-client` and is versioned
+at <https://github.com/amandeepjutla/wallabag-client>. Install
+[Pixi](https://pixi.prefix.dev/latest/installation/), then:
+
+```sh
+mkdir -p "$HOME/Dropbox/tools"
+git clone https://github.com/amandeepjutla/wallabag-client.git \
+    "$HOME/Dropbox/tools/wallabag-client"
+cd "$HOME/Dropbox/tools/wallabag-client"
+pixi install --locked
+mkdir -p "$HOME/Dropbox/scripts/_platform_independent"
+install -m 755 wallabag "$HOME/Dropbox/scripts/_platform_independent/wallabag"
+wallabag --help
+```
+
+`~/Dropbox/scripts/_platform_independent` must be on PATH. Its launcher is a
+standalone file; a matching copy is tracked in this repository for restoration.
+Running `./wallabag` in a checkout uses that checkout. `WALLABAG_PROJECT` overrides
+the project location for an installed launcher.
+
+`pixi.toml` and `pixi.lock` define Python 3.13, the runtime dependencies, and the
+local package installation. Textual is constrained to 4.0 for the reader's table
+layout. Dependencies come from conda-forge except Delorean 1.0.0, which is pinned
+from PyPI. The lock targets Apple Silicon macOS and Linux x86-64; runtime checks
+are performed on macOS.
+
+The committed `.pixi/config.toml` enables Pixi's
+[detached environments](https://pixi.prefix.dev/latest/reference/pixi_configuration/#detached-environments).
+Python and installed packages live in the machine cache outside Dropbox and are
+recreated with `pixi install --locked`. All application source, build definitions,
+launcher code, and tests live in this repository. The launcher automatically
+selects the locked environment.
+
+## Account configuration
+
+Both interfaces use `~/.config/wallabag-cli/config.ini`, or the corresponding
+location under `XDG_CONFIG_HOME`. An existing configuration is reused. For a new
+account, run `wallabag config` and provide the server URL, username, password,
+OAuth client ID, and client secret from the Wallabag server's API client settings.
+A custom file can be selected with `wallabag --config /path/to/config.ini list`
+or `wallabag --tui --config /path/to/config.ini`.
+
+Credentials remain outside the repository. Keep the config private: the existing
+credential encryption is local obfuscation. Its `api.encryption_hostname` field
+preserves the original hostname used for encryption. If a legacy configuration
+fails to decrypt after a hostname change, restore that field to the exact original
+hostname or run `wallabag config`. Moving to a different operating-system username
+also requires reconfiguration. The application refreshes its cached access token
+as needed, so the config must be writable by its owner.
+
+## Development and verification
+
+```sh
+pixi install --locked --all
+pixi run start                 # Reader
+pixi run cli --help            # CLI
+pixi run test-reader           # Offline reader and API regressions
+pixi run -e dev test           # Complete offline test suite
+```
+
+The package is installed from this checkout in editable mode. Source edits take
+effect immediately. After changing dependencies, run `pixi install --all`, test,
+and commit both the manifest and lockfile. After updating the launcher, install
+its new copy into `~/Dropbox/scripts/_platform_independent/wallabag`.
+
+Tests cover the original CLI/API behavior and the local repairs: saved credential
+recovery, OAuth request handling, article loading and scrolling, terminal resizing,
+read/star updates, error handling, and clean exit. Server interactions in these
+tests are mocked.
+
+The inherited `flake.nix` remains available as historical Nix setup; Pixi is the
+maintained installation and test workflow for this fork.

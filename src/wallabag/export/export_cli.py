@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Maintenance: Kera (GPT-6-Astra)
+# Created: 2026-09-11
 
 from .export import Export
 from bs4 import BeautifulSoup
@@ -37,7 +39,7 @@ class ExportCli(Export):
             return "\n"
 
     def __break_paragraphs(self, soup):
-        for p in soup.findAll('p'):
+        for p in soup.find_all('p'):
             p.insert_before(self.__get_new_line_tag(soup, times=2))
 
     def __mark_annotations(self, html):
@@ -80,7 +82,7 @@ class ExportCli(Export):
         else:
             h1colors = h1colore = ""
         for header in ['h1', 'h2', 'h3']:
-            for h in soup.findAll(header):
+            for h in soup.find_all(header):
                 h.string = f"{h1colors}{h.string}{h1colore}"
                 h.insert_before(self.__get_new_line_tag(soup, 2))
                 h.insert_after(self.__get_new_line_tag(soup))
@@ -96,23 +98,22 @@ class ExportCli(Export):
             bcolors = Fore.RED
             bcolore = Fore.RESET
             for bold in ['b', 'strong']:
-                for b in soup.findAll('b'):
+                for b in soup.find_all('b'):
                     b.string = f"{bcolors}{b.string}{bcolore}"
 
     def __make_hr(self, soup):
         try:
-            print(self.width)
             hrstring = "".ljust(self.width, '-')
         except OSError:
             hrstring = "-----"
-        for hr in soup.findAll('hr'):
+        for hr in soup.find_all('hr'):
             replace = soup.new_tag('p')
             replace.string = hrstring
             hr.insert_after(replace)
             hr.unwrap()
 
     def __replace_images(self, soup):
-        for img in soup.findAll('img'):
+        for img in soup.find_all('img'):
             replace = soup.new_tag('span')
             try:
                 alt = f" \"{img['alt']}\""

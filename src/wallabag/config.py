@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Maintenance: Kera (GPT-6-Astra)
+# Created: 2026-09-11
 
 import base64
 import configparser
@@ -27,6 +29,7 @@ class Sections():
 
 
 class Options():
+    ENCRYPTION_HOSTNAME = "encryption_hostname"
     SERVERURL = "serverurl"
     USERNAME = "username"
     PASSWORD = "password"
@@ -129,11 +132,18 @@ class Configs():
 
     def __cryptkey(self):
         s1 = getpass.getuser()
-        s2 = socket.gethostname()
+        s2 = self.config.get(Sections.API, Options.ENCRYPTION_HOSTNAME,
+                             fallback=socket.gethostname())
         return MD5.new((s1 + s2).encode("utf-8")).digest()
+
+    def __remember_hostname(self):
+        if not self.config.has_option(Sections.API, Options.ENCRYPTION_HOSTNAME):
+            self.set(Sections.API, Options.ENCRYPTION_HOSTNAME,
+                     socket.gethostname())
 
     def __encrypt(self, value):
         try:
+            self.__remember_hostname()
             cipher = AES.new(self.__cryptkey(), AES.MODE_EAX)
             ciphertext, tag = cipher.encrypt_and_digest(value.encode('utf-8'))
             return "%s@%s@%s" % (
@@ -141,17 +151,19 @@ class Configs():
                     base64.b64encode(ciphertext).decode('utf-8'),
                     base64.b64encode(tag).decode('utf-8'))
         except Exception as e:
-            print(e)
-            ret = None
-        return ret
+            raise ValueError("Could not encrypt the Wallabag credentials.") from e
 
     def __decrypt(self, value):
         try:
             nonce, ciphertext, tag = map(
                     lambda v: base64.b64decode(v), value.split('@'))
             cipher = AES.new(self.__cryptkey(), AES.MODE_EAX, nonce)
-            return cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+            result = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+            self.__remember_hostname()
+            return result
         except Exception as e:
-            print(e)
-            ret = None
-        return ret
+            raise ValueError(
+                "Could not decrypt the saved Wallabag credentials. "
+                "The hostname may have changed; restore encryption_hostname "
+                "in the config or run 'wallabag config'."
+            ) from e

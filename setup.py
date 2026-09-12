@@ -1,3 +1,5 @@
+# Packaging maintenance: Kera (GPT-6 Astra)
+# Created: 2026-09-12
 from setuptools import find_packages, setup
 
 with open("README.md", "r") as fh:
@@ -5,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='wallabag-client',
-    use_scm_version=True,
+    use_scm_version={"fallback_version": "0.1.dev0"},
     packages=find_packages('src'),
     package_dir={'': 'src'},
     url='https://github.com/artur-shaik/wallabag-client',
@@ -22,11 +24,6 @@ setup(
     ],
     python_requires='>=3.6',
 
-    setup_requires=[
-        'pytest-runner==5.1',
-        'setuptools_scm==3.3.3',
-        'wheel',
-    ],
     install_requires=[
         'beautifulsoup4>=4.9.1',
         'pycryptodome>=3.9.8',
@@ -45,10 +42,6 @@ setup(
         'markdownify',
         'textual>=0.44.0',
     ],
-    tests_require=[
-        'pytest==4.6.3',
-    ],
-
     entry_points='''
         [console_scripts]
         wallabag=wallabag.wallabag:cli

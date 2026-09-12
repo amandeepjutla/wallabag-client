@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Maintenance: Kera (GPT-6-Astra)
+# Created: 2026-09-11
 
 import delorean
 
@@ -20,12 +22,12 @@ class Entry:
     def __init__(self, item):
         self.entry_id = item['id']
 
-        title = item['title']
+        title = item.get('title') or item.get('url') or "Untitled"
         title = title.replace("\n", "")
         title = " ".join(title.split())
         self.title = title
 
-        self.content = item['content']
+        self.content = item.get('content') or ""
         self.url = item['url']
         self.read = item['is_archived'] == 1
         self.starred = item['is_starred'] == 1

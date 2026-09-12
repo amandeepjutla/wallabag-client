@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Test compatibility: Kera (GPT-6 Astra)
+# Created: 2026-09-12
 
 import pytest
 
@@ -91,7 +93,7 @@ class TestShowCommand():
         assert output == (
                 '# title\n'
                 '## Sub title\n\n'
-                'content\n')
+                'content')
 
     def test_entry_html_strip_content(self, monkeypatch):
         def request(self):

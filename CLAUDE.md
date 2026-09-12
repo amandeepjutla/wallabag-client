@@ -1,5 +1,16 @@
 # Wallabag Client - TUI Redesign Project
 
+## Current local workflow (2026-09-12)
+
+The maintained project is `~/Dropbox/tools/wallabag-client`. Use its committed
+Pixi manifest and lockfile: `pixi install --locked --all`, `pixi run start`,
+`pixi run cli --help`, and `pixi run -e dev test`. The standalone launcher is
+copied from `wallabag` into `~/Dropbox/scripts/_platform_independent/wallabag`.
+The Python environment is detached from Dropbox. Credentials stay in the user's
+`wallabag-cli/config.ini` configuration directory. See README.md for restoration
+and configuration details. The micromamba environment and scratch checkout are
+superseded by this layout. The remaining notes describe the original TUI work.
+
 ## Overview
 This project has been redesigned from a traditional CLI tool into a modern Terminal User Interface (TUI) similar to the pine email client. The TUI provides an intuitive, interactive way to browse and read wallabag articles.
 
@@ -58,8 +69,8 @@ The TUI is **completely functional** and provides:
 
 **Installation & Usage:**
 ```bash
-pip install -e .
-wallabag-tui
+pixi install --locked
+pixi run start
 ```
 
 ## Core Functionality ✅ COMPLETE
@@ -175,7 +186,7 @@ When working on this project:
 
 ```bash
 # Development install (run after any code changes)
-pip install -e .
+pixi install --locked --all
 
 # Test both commands
 wallabag --help
@@ -190,7 +201,7 @@ wallabag config
 
 ## Important Notes for Development
 
-1. **After Code Changes**: Always run `pip install -e .` after modifying source code to refresh entry points
+1. **After Code Changes**: The Pixi editable install reads this checkout directly; use `pixi install` after changing package metadata or dependencies
 2. **Configuration Required**: The TUI requires wallabag configuration. Run `wallabag config` first
 3. **Dependencies**: The textual dependency is now included in setup.py and will be installed automatically
 

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Maintenance: Kera (GPT-6-Astra)
+# Created: 2026-09-11
 
 
 from wallabag.api.api import Api, ApiMethod
@@ -15,9 +17,9 @@ class ApiToken(Api):
         return self._build_url(ApiMethod.TOKEN)
 
     def _make_request(self, request):
-        return self._request_get(request)
+        return self._request_post(request)
 
-    def _get_params(self):
+    def _get_data(self):
         return {
             'grant_type': "password",
             'client_id': self.config.get(Sections.OAUTH2, Options.CLIENT),

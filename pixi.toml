@@ -1,0 +1,55 @@
+[workspace]
+name = "wallabag-client"
+version = "0.1.0"
+authors = ["Amandeep Jutla <ajutla@gmail.com>"]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64"]
+
+[dependencies]
+python = "3.13.*"
+beautifulsoup4 = ">=4.13,<5"
+pycryptodome = ">=3.23,<4"
+requests = ">=2.32,<3"
+click = "8.2.*"
+yaspin = "3.1.*"
+click-repl = ">=0.3,<0.4"
+pyxdg = ">=0.28,<0.29"
+colorama = ">=0.4.6,<0.5"
+python-dateutil = ">=2.9,<3"
+pytz = ">=2025.2"
+babel = ">=2.17,<3"
+humanize = ">=4.12,<5"
+lxml = ">=6,<7"
+tzlocal = ">=5.3,<6"
+tabulate = ">=0.9,<0.10"
+packaging = ">=25,<26"
+markdownify = ">=1.1,<2"
+# The reader's table sizing is tested against Textual 4.
+textual = "4.0.*"
+setuptools = ">=80,<81"
+setuptools-scm = ">=8,<9"
+wheel = ">=0.45,<0.46"
+
+[pypi-dependencies]
+# Delorean is unavailable on conda-forge; keep the existing application version.
+delorean = "==1.0.0"
+wallabag-client = { path = ".", editable = true }
+
+[pypi-options]
+# Use the build tools pinned above, from conda-forge.
+no-build-isolation = ["wallabag-client"]
+
+[tasks]
+start = "wallabag-tui"
+cli = "wallabag"
+test-reader = "python -m unittest discover -s tests -p test_repair.py -v"
+
+[feature.dev.dependencies]
+pytest = ">=8,<9"
+
+[feature.dev.tasks]
+test = "python -m pytest tests -q"
+
+[environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }

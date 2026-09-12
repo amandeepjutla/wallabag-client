@@ -1,3 +1,5 @@
+# Maintenance: Kera (GPT-6-Astra)
+# Created: 2026-09-11
 import re
 import json
 import logging
@@ -109,7 +111,7 @@ class Response:
             content_disposition=None):
         self.content_type = content_type
         self.content_disposition = content_disposition
-        if self.content_type == 'application/json':
+        if (self.content_type or '').split(';', 1)[0].strip() == 'application/json':
             if text:
                 try:
                     self.response = json.loads(text)
@@ -157,12 +159,16 @@ class Response:
         return self.error != Error.OK
 
     def __error_from_server(self):
+        if not isinstance(self.response, dict):
+            return ("The server returned an invalid error response.", None)
         return (self.response['error'] if 'error' in self.response else None,
                 self.response['error_description']
                 if 'error_description' in self.response else None)
 
 
 class Api(ABC):
+
+    REQUEST_TIMEOUT = (10, 30)
 
     VERSION_RE = re.compile('\\d+\\.\\d+\\.\\d+')
     URL_RE = re.compile("(?i)https?:\\/\\/.+")
@@ -315,12 +321,12 @@ class Api(ABC):
 
     def __make_request(self, request):
         try:
-            self.log.debug('request data: %s', request.__dict__)
+            self.log.debug('request: %s %s', request.type.name, request.url)
 
             result = Api.REQUEST_METHODS[request.type](
                     request.url, headers=request.headers,
                     params=request.api_params, data=request.data,
-                    allow_redirects=True)
+                    allow_redirects=True, timeout=self.REQUEST_TIMEOUT)
             content_type = None
             content_disposition = None
             if 'Content-Type' in result.headers:
@@ -330,14 +336,15 @@ class Api(ABC):
             response = Response(
                     result.status_code, result.text,
                     result.content, content_type, content_disposition)
-        except (
-                requests.exceptions.ConnectionError,
-                requests.exceptions.MissingSchema) as error:
-            self.log.exception('request exception')
-            raise RequestException('Connection error', error)
+        except requests.exceptions.Timeout:
+            raise RequestException('Request timed out',
+                                   'The Wallabag server did not respond in time.') from None
+        except requests.exceptions.RequestException:
+            raise RequestException('Connection error',
+                                   'Could not reach the Wallabag server.') from None
 
         self.log.debug('response headers: %s', result.headers)
-        self.log.debug('response result: %s', response.__dict__)
+        self.log.debug('response status: %s', result.status_code)
 
         if response.has_error():
             raise RequestException(response=response)
