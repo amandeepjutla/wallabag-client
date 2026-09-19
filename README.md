@@ -1,11 +1,11 @@
 # wallabag-client
 
 A terminal reader and command-line client for [wallabag](https://wallabag.org/),
-based on [Artur Shaik's client](https://github.com/artur-shaik/wallabag-client)
-with Amandeep Jutla's Textual reader.
+based on [Artur Shaik's client](https://github.com/artur-shaik/wallabag-client).
+Forked in July 2025 with a TUI interface added by Claude Sonnet 4.
 
-README based on the upstream documentation and Amandeep's fork. Local setup
-sections authored by Kera (GPT-6 Astra), created 2026-09-11.
+README based on the upstream documentation authored by Kera (GPT-6 Astra) on 
+2026-09-11.
 
 Later revisions by Kera (GPT-6 Astra):
 
