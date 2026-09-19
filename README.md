@@ -5,8 +5,11 @@ based on [Artur Shaik's client](https://github.com/artur-shaik/wallabag-client)
 with Amandeep Jutla's Textual reader.
 
 README based on the upstream documentation and Amandeep's fork. Local setup
-sections authored by Kera (GPT-6 Astra), created 2026-09-11; README revised for
-Pixi by Kera (GPT-6 Astra) on 2026-09-12.
+sections authored by Kera (GPT-6 Astra), created 2026-09-11.
+
+Later revisions by Kera (GPT-6 Astra):
+
+- **2026-09-12:** Revised the README for Pixi.
 
 ## Use
 
