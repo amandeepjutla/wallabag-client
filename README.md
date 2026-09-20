@@ -10,6 +10,7 @@ README based on the upstream documentation authored by Kera (GPT-6 Astra) on
 Later revisions by Kera (GPT-6 Astra):
 
 - **2026-09-12:** Revised the README for Pixi.
+- **2026-09-20:** Documented the reader's 80-character soft wrapping.
 
 ## Use
 
@@ -37,6 +38,9 @@ deleting entries, plus annotations and opening entries in a browser.
 | Home / End | Jump to the beginning or end |
 | Q / Escape | Return from an article |
 | Q | Quit from the article list |
+
+Article text soft-wraps at 80 characters, reflowing to fit narrower terminals.
+Wrapping changes the display only; article text and paragraph breaks are preserved.
 
 Opening an article marks it read after its content loads successfully. Read and
 star actions synchronize with the server. The reader requires an internet

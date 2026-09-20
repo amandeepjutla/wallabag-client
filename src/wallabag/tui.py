@@ -205,7 +205,7 @@ class ArticleViewScreen(Screen):
                                        raw=False, image_links=False)
             content = ExportFactory.create(
                 full_entry, params, ScreenType.TERM,
-                max(20, self.size.width - 6),
+                min(80, max(20, self.size.width - 6)),
             ).run().strip()
             self.query_one("#article_content", Static).update(
                 Text.from_ansi(content or "No content available for this article."))
@@ -260,7 +260,8 @@ class WallabagTUI(App):
     #article_url, #article_meta { height: auto; color: $text-muted; }
     #article_meta { margin-bottom: 1; }
     #content_scroll { height: 1fr; }
-    #article_content { height: auto; padding: 0 1; }
+    /* Include two padding cells around the 80-column reading area. */
+    #article_content { height: auto; width: 100%; max-width: 82; padding: 0 1; }
     """
 
     def __init__(self, config_path: Optional[str] = None):
