@@ -12,6 +12,10 @@ Later revisions by Kera (GPT-6 Astra):
 - **2026-09-12:** Revised the README for Pixi.
 - **2026-09-20:** Documented the reader's 80-character soft wrapping.
 
+Later revisions by Claude Opus 5.5 (claude-opus-5-5):
+
+- **2026-10-06:** Added a light appearance that follows the `appearance` command.
+
 ## Use
 
 ```sh
@@ -41,6 +45,14 @@ deleting entries, plus annotations and opening entries in a browser.
 
 Article text soft-wraps at 80 characters, reflowing to fit narrower terminals.
 Wrapping changes the display only; article text and paragraph breaks are preserved.
+
+The reader has a dark look and a light one, and follows the `appearance`
+command (`~/Dropbox/scripts/docs/appearance_summary.md`). It reads one word,
+`light` or `dark`, from `~/.local/state/appearance/mode` when it starts and
+about once a second after that, so a running reader changes with the terminal.
+Without that file it is dark, with Textual's stock theme as before. The light
+theme is `DAY_THEME` in `src/wallabag/tui.py`, in the colours of Tomorrow Day
+1991. The command-line client's own output is unchanged.
 
 Opening an article marks it read after its content loads successfully. Read and
 star actions synchronize with the server. The reader requires an internet

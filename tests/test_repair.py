@@ -1,9 +1,11 @@
 # Kera (GPT-6-Astra)
 # Created: 2026-09-11
+# Revised by Claude Opus 5.5 (claude-opus-5-5): 2026-10-06 (light and dark appearance)
 """Offline regressions for credential recovery and the terminal reader."""
 import asyncio
 import contextlib
 import io
+import os
 import tempfile
 import threading
 import unittest
@@ -20,7 +22,11 @@ from wallabag.api.api_token import ApiToken
 from wallabag.api.get_entry import GetEntry
 from wallabag.config import Configs, Options, Sections
 from wallabag.entry import Entry
+from wallabag import tui
 from wallabag.tui import ArticleListScreen, ArticleViewScreen, WallabagTUI
+
+# The suite runs in dark mode whatever this machine's appearance is.
+tui.MODE_FILE = Path(os.devnull) / 'mode'
 
 
 def article(entry_id=1, read=False):
@@ -278,6 +284,23 @@ class ReaderTests(unittest.IsolatedAsyncioTestCase):
                 await pilot.pause()
         self.assertEqual(app.return_code, 1)
         self.assertIn('wallabag config', output.getvalue())
+
+    async def test_follows_the_appearance_mode_file(self):
+        mode_file = Path(self.temp.name) / 'mode'
+        mode_file.write_text('light\n')
+        with patch.object(tui, 'MODE_FILE', mode_file):
+            async with self.app.run_test() as pilot:
+                await self.settle(pilot)
+                self.assertEqual(self.app.theme, 'tomorrow-day-1991')
+                self.assertFalse(self.app.current_theme.dark)
+                for text, theme in (('dark\n', 'textual-dark'), ('light\n', 'tomorrow-day-1991'),
+                                    ('bright', 'textual-dark')):
+                    mode_file.write_text(text)
+                    self.app.follow_appearance()
+                    self.assertEqual(self.app.theme, theme)
+                mode_file.unlink()
+                self.app.follow_appearance()
+                self.assertEqual(self.app.theme, 'textual-dark')
 
     async def test_loading_does_not_block_quit(self):
         gate = threading.Event()

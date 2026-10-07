@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # Kera (GPT-6-Astra)
 # Created: 2026-09-11
+# Revised by Claude Opus 5.5 (claude-opus-5-5): 2026-10-06 (light and dark appearance)
 
 import asyncio
+import os
 import sys
+from pathlib import Path
 from typing import List, Optional
 
 from rich.text import Text
@@ -12,6 +15,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, ScrollableContainer
 from textual.screen import Screen
+from textual.theme import Theme
 from textual.widgets import DataTable, Footer, Header, Static, Label
 
 from wallabag.config import Configs
@@ -22,6 +26,28 @@ from wallabag.api.update_entry import UpdateEntry, Params as UpdateEntryParams
 from wallabag.export.export_factory import ExportFactory
 from wallabag.format_type import ScreenType
 from wallabag.commands.show import ShowCommandParams
+
+# Light and dark. The `appearance` command (~/Dropbox/scripts/_macos) writes
+# one word, "light" or "dark", to this file; a missing file means dark. The
+# reader looks at start and about once a second after that. vault_reader.py
+# and rss_reader.py read the same file and use the same light theme.
+MODE_FILE = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state") / "appearance" / "mode"
+
+
+def appearance_mode() -> str:
+    try:
+        return "light" if MODE_FILE.read_text().strip() == "light" else "dark"
+    except OSError:
+        return "dark"
+
+
+# Dark keeps Textual's stock theme. This is its light counterpart, in the
+# colours of Tomorrow Day 1991.
+DAY_THEME = Theme(
+    name="tomorrow-day-1991", dark=False, foreground="#27292c", background="#ffffff",
+    surface="#ffffff", panel="#e9ecf0", primary="#3a6399", secondary="#186d73", accent="#a34f12",
+    warning="#796000", error="#b02324", success="#356d3b")
+APP_THEMES = {"dark": "textual-dark", "light": DAY_THEME.name}
 
 
 class ArticleTable(DataTable):
@@ -275,10 +301,18 @@ class WallabagTUI(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.register_theme(DAY_THEME)
+        self.follow_appearance()
+        self.set_interval(1, self.follow_appearance)
         if not self.config.is_valid():
             self.exit(return_code=1, message="Wallabag is not configured. Run 'wallabag config'.")
             return
         self._load_articles()
+
+    def follow_appearance(self) -> None:
+        theme = APP_THEMES[appearance_mode()]
+        if self.theme != theme:
+            self.theme = theme
 
     @work
     async def _load_articles(self) -> None:
