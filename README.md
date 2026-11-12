@@ -16,16 +16,32 @@ Later revisions by Claude Opus 5.5 (claude-opus-5-5):
 
 - **2026-10-06:** Added a light appearance that follows the `appearance` command.
 
+Later revisions by Kera (GPT-6.1 Sol):
+
+- **2026-11-11:** Added the optional 57-column reader layout and direct `wallabag --slim` launcher routing.
+
 ## Use
 
 ```sh
 wallabag                       # Open the terminal reader
+wallabag --slim                # Compact reader for a 57-column scratch pane
 wallabag list                  # List articles through the CLI
 wallabag --help                # Show CLI commands
 wallabag --cli --version        # Show the installed client version
 wallabag config                # Configure a Wallabag account
 wallabag --tui --config /path/to/config.ini
 ```
+
+`--slim` fits a 57 × 49 ktab scratch pane. The article list gives most of its
+width to the title, with compact read/star status and reading time. Article IDs
+and tags appear with the full title and URL inside the scrollable reading view.
+The article body appears once, without the command-line export's repeated title.
+**Enter** reads, **Esc/Q** returns to the same list position, and **Q** quits
+from the list. The short footer keeps the main keys visible. Opening and explicit
+read/star actions retain the existing server synchronization. The full reader
+and command-line interface keep their existing layouts and output.
+
+`wallabag --tui --slim --config /path/to/config.ini` also selects this layout.
 
 With no arguments, the launcher opens the reader. Arguments select the original
 CLI; `--tui` passes options to the reader and `--cli` explicitly selects the CLI.

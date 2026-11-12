@@ -2,6 +2,7 @@
 # Kera (GPT-6-Astra)
 # Created: 2026-09-11
 # Revised by Claude Opus 5.5 (claude-opus-5-5): 2026-10-06 (light and dark appearance)
+# Revised by Kera (GPT-6.1 Sol): 2026-11-11 (57-column slim layout)
 
 import asyncio
 import os
@@ -65,7 +66,7 @@ class ArticleTable(DataTable):
         metadata_width = sum(column.get_render_width(self)
                              for column in self.ordered_columns
                              if column.key != "title")
-        width = max(20, self.scrollable_content_region.width
+        width = max(8 if self.app.slim else 20, self.scrollable_content_region.width
                     - metadata_width - 2 * self.cell_padding)
         if title.width != width:
             title.width = width
@@ -101,24 +102,31 @@ class ArticleListScreen(Screen):
             yield ArticleTable(id="articles_table", cursor_type="row")
             yield Label("", id="status_label", markup=False)
         yield Footer()
+        yield Static("Enter Read  r Read/unread  s Star  q Quit", classes="slim-help", markup=False)
 
     def on_mount(self) -> None:
+        self.set_class(self.app.slim, "slim")
         table = self.query_one(DataTable)
-        table.add_column("ID", key="id", width=6)
-        table.add_column("Status", key="status", width=6)
+        if not self.app.slim:
+            table.add_column("ID", key="id", width=6)
+        table.add_column("●★" if self.app.slim else "Status", key="status", width=2 if self.app.slim else 6)
         table.add_column("Title", key="title", width=20)
-        table.add_column("Tags", key="tags", width=10)
+        if not self.app.slim:
+            table.add_column("Tags", key="tags", width=10)
         table.add_column("Time", key="time", width=5)
         for entry in self.entries:
+            cells = [self._get_status_chars(entry), Text(entry.title, no_wrap=True, overflow="ellipsis")]
+            if not self.app.slim:
+                cells.insert(0, str(entry.entry_id))
+                cells.append(Text(entry.get_tags_string() or ""))
+            cells.append(f"{entry.reading_time}m" if entry.reading_time else "")
             table.add_row(
-                str(entry.entry_id), self._get_status_chars(entry),
-                Text(entry.title, no_wrap=True, overflow="ellipsis"),
-                Text(entry.get_tags_string() or ""),
-                f"{entry.reading_time}m" if entry.reading_time else "",
+                *cells,
                 key=str(entry.entry_id),
             )
-        self._show_status(f"{len(self.entries)} articles. N = unread; R = read; * = starred."
-                          if self.entries else "No articles found.")
+        status = (f"{len(self.entries)} articles · N unread  R read  * starred" if self.app.slim
+                  else f"{len(self.entries)} articles. N = unread; R = read; * = starred.")
+        self._show_status(status if self.entries else "No articles found.")
         table.focus()
         table.call_after_refresh(table.fit_title_column)
 
@@ -211,14 +219,27 @@ class ArticleViewScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         with Container(id="article_container"):
-            yield Static(self.entry.title, id="breadcrumb", markup=False)
-            yield Static(self.entry.url, id="article_url", markup=False)
-            yield Static(f"Reading time: {self.entry.reading_time or '?'}m", id="article_meta")
+            if not self.app.slim:
+                yield from self.heading_widgets()
             with ScrollableContainer(id="content_scroll"):
+                if self.app.slim:
+                    yield from self.heading_widgets()
                 yield Static("Loading article content…", id="article_content", markup=False)
         yield Footer()
+        yield Static("Esc List  j/k Scroll  PgDn Page  q Back", classes="slim-help", markup=False)
+
+    def heading_widgets(self) -> ComposeResult:
+        yield Static(self.entry.title, id="breadcrumb", markup=False)
+        yield Static(self.entry.url, id="article_url", markup=False)
+        details = f"Reading time: {self.entry.reading_time or '?'}m"
+        if self.app.slim:
+            details += f" · #{self.entry.entry_id}"
+            if tags := self.entry.get_tags_string():
+                details += f" · {tags}"
+        yield Static(details, id="article_meta", markup=False)
 
     def on_mount(self) -> None:
+        self.set_class(self.app.slim, "slim")
         self.query_one("#content_scroll").focus()
         self._load_article_content()
 
@@ -231,8 +252,8 @@ class ArticleViewScreen(Screen):
                                        raw=False, image_links=False)
             content = ExportFactory.create(
                 full_entry, params, ScreenType.TERM,
-                min(80, max(20, self.size.width - 6)),
-            ).run().strip()
+                min(80, max(20, self.size.width - (2 if self.app.slim else 6))),
+            ).run(include_title=not self.app.slim).strip()
             self.query_one("#article_content", Static).update(
                 Text.from_ansi(content or "No content available for this article."))
         except Exception as error:
@@ -288,10 +309,16 @@ class WallabagTUI(App):
     #content_scroll { height: 1fr; }
     /* Include two padding cells around the 80-column reading area. */
     #article_content { height: auto; width: 100%; max-width: 82; padding: 0 1; }
+    .slim-help { display: none; height: 1; padding: 0 1; background: $surface; }
+    Screen.slim Footer { display: none; }
+    Screen.slim .slim-help { display: block; }
+    Screen.slim #article_content { padding: 0; }
+    Screen.slim #content_scroll { overflow-x: hidden; }
     """
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[str] = None, *, slim: bool = False):
         super().__init__()
+        self.slim = slim
         self.config = Configs(config_path)
         self.entries: List[Entry] = []
 
@@ -336,9 +363,10 @@ def main():
 
     parser = argparse.ArgumentParser(description='Wallabag TUI - Terminal User Interface')
     parser.add_argument('--config', help='Use custom configuration file')
+    parser.add_argument('--slim', action='store_true', help='Use a compact article list and reader for narrow panes')
     args = parser.parse_args()
     try:
-        app = WallabagTUI(args.config)
+        app = WallabagTUI(args.config, slim=args.slim)
         app.run()
         return app.return_code
     except (ValueError, OSError) as error:

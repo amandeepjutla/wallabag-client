@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Maintenance: Kera (GPT-6-Astra)
 # Created: 2026-09-11
+# Revised by Kera (GPT-6.1 Sol): 2026-11-11 (optional body-only reader output)
 
 from .export import Export
 from bs4 import BeautifulSoup
@@ -17,7 +18,7 @@ class ExportCli(Export):
         self.params = params
         self.width = width
 
-    def run(self):
+    def run(self, *, include_title=True):
         soup = self.__mark_annotations(self.entry.content)
         self.__color_headers(soup)
         self.__color_bold(soup)
@@ -25,7 +26,7 @@ class ExportCli(Export):
         self.__replace_images(soup)
         self.__break_paragraphs(soup)
         result = self.__make_annotations(soup).replace('\n\n\n', '\n\n')
-        return self.__output(self.entry.title, result)
+        return self.__output(self.entry.title, result) if include_title else result
 
     def __output(self, title, article):
         return (f"{title}\n"

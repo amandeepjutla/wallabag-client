@@ -2,6 +2,7 @@
 # Kera (GPT-6 Astra)
 # Created: 2026-09-11
 # Revised: 2026-09-12
+# Revised by Kera (GPT-6.1 Sol): 2026-11-11 (--slim reader dispatch)
 # No arguments: reader. With arguments: CLI. --tui: reader options.
 set -euo pipefail
 
@@ -17,8 +18,8 @@ fi
 
 if [[ $# -eq 0 ]]; then
     wallabag_command=wallabag-tui
-elif [[ $1 == --tui ]]; then
-    shift
+elif [[ $1 == --tui || $1 == --slim ]]; then
+    if [[ $1 == --tui ]]; then shift; fi
     wallabag_command=wallabag-tui
 else
     wallabag_command=wallabag
