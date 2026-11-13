@@ -3,9 +3,8 @@
 # Created: 2026-09-11
 # Revised by Claude Opus 5.5 (claude-opus-5-5): 2026-10-06 (light and dark appearance)
 # Revised by Kera (GPT-6.1 Sol): 2026-11-11 (57-column slim layout)
-# Revised by Kera (GPT-6 Astra): 2026-11-13 (paged article loading and refresh)
+# Revised by Kera (GPT-6 Astra): 2026-11-13 (paging, refresh, and request lifetime)
 
-import asyncio
 import os
 import sys
 from pathlib import Path
@@ -29,6 +28,7 @@ from wallabag.export.export_factory import ExportFactory
 from wallabag.format_type import ScreenType
 from wallabag.commands.show import ShowCommandParams
 from wallabag.reader_paging import EntryPage, PAGE_SIZE, parse_page
+from wallabag.reader_requests import ReaderRequests
 
 # Light and dark. The `appearance` command (~/Dropbox/scripts/_macos) writes
 # one word, "light" or "dark", to this file; a missing file means dark. The
@@ -185,7 +185,7 @@ class ArticleListScreen(Screen):
         self._loading = True
         self._show_status("Refreshing articles…" if refresh else "Loading more articles…")
         try:
-            page = await asyncio.to_thread(load_article_page, self.config, page_number)
+            page = await self.app.reader_requests.run(load_article_page, self.config, page_number)
         except Exception as error:
             retry = "R" if refresh else "L"
             self._show_status(f"Could not load articles: {error}\n{self._list_summary()} · {retry} Retry")
@@ -253,7 +253,7 @@ class ArticleListScreen(Screen):
         self._show_status("Updating article…")
         try:
             api = UpdateEntry(self.config, entry.entry_id, {parameter: new_value})
-            await asyncio.to_thread(api.request)
+            await self.app.reader_requests.run(api.request)
             setattr(entry, attribute, new_value)
             self._refresh_article_status(entry)
             if attribute == "read":
@@ -332,7 +332,7 @@ class ArticleViewScreen(Screen):
     @work
     async def _load_article_content(self) -> None:
         try:
-            response = await asyncio.to_thread(GetEntry(self.config, self.entry.entry_id).request)
+            response = await self.app.reader_requests.run(GetEntry(self.config, self.entry.entry_id).request)
             full_entry = Entry(response.response)
             params = ShowCommandParams(self.entry.entry_id, ScreenType.TERM, colors=False,
                                        raw=False, image_links=False)
@@ -348,7 +348,7 @@ class ArticleViewScreen(Screen):
 
         if not self.entry.read:
             try:
-                await asyncio.to_thread(UpdateEntry(self.config, self.entry.entry_id, {
+                await self.app.reader_requests.run(UpdateEntry(self.config, self.entry.entry_id, {
                     UpdateEntryParams.READ: True,
                 }).request)
                 self.entry.read = True
@@ -407,6 +407,7 @@ class WallabagTUI(App):
         self.slim = slim
         self.config = Configs(config_path)
         self.entries: List[Entry] = []
+        self.reader_requests = ReaderRequests()
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -430,7 +431,7 @@ class WallabagTUI(App):
     @work
     async def _load_articles(self) -> None:
         try:
-            page = await asyncio.to_thread(load_article_page, self.config, 1)
+            page = await self.reader_requests.run(load_article_page, self.config, 1)
             self.entries = page.entries
             self.push_screen(ArticleListScreen(self.config, self.entries, next_page=page.next_page, total=page.total))
         except Exception as error:

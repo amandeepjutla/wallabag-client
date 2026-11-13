@@ -268,6 +268,81 @@ class PagingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.requests, [1, 2])
         self.assertTrue(screen.entries[0].starred)
 
+    async def test_return_during_article_load_keeps_later_paging_serial(self):
+        screen, pilot = await self.launch()
+        article_started, article_release = threading.Event(), threading.Event()
+        self.addCleanup(article_release.set)
+
+        def slow_article(api):
+            article_started.set()
+            article_release.wait(5)
+            return SimpleNamespace(response=article(api.entry_id))
+
+        with patch.object(tui.GetEntry, "request", new=slow_article):
+            try:
+                await pilot.press("enter")
+                self.assertTrue(await asyncio.to_thread(article_started.wait, 1))
+                await pilot.press("escape", "l")
+                await pilot.pause()
+                self.assertIs(self.app.screen, screen)
+                self.assertEqual(self.requests, [1], "paging must wait for the cancelled worker's actual HTTP call")
+                self.assertEqual(self.updates, [])
+            finally:
+                article_release.set()
+            await self.settle(pilot)
+        self.assertEqual(self.requests, [1, 2])
+        self.assertEqual(len(screen.entries), 200)
+        self.assertEqual(self.updates, [], "leaving before content arrives must not mark the article read")
+
+    async def test_cancelled_second_article_is_not_requested_after_first_finishes(self):
+        screen, pilot = await self.launch()
+        started, release = threading.Event(), threading.Event()
+        self.addCleanup(release.set)
+        reads = []
+
+        def slow_article(api):
+            reads.append(api.entry_id)
+            if api.entry_id == 1:
+                started.set()
+                release.wait(5)
+            return SimpleNamespace(response=article(api.entry_id))
+
+        with patch.object(tui.GetEntry, "request", new=slow_article):
+            try:
+                await pilot.press("enter")
+                self.assertTrue(await asyncio.to_thread(started.wait, 1))
+                await pilot.press("escape", "j", "enter")
+                await pilot.pause()
+                self.assertIsInstance(self.app.screen, tui.ArticleViewScreen)
+                await pilot.press("escape")
+                await pilot.pause()
+                self.assertIs(self.app.screen, screen)
+                self.assertEqual(reads, [1])
+            finally:
+                release.set()
+            # A subsequent request waits for all earlier lock holders and makes
+            # the cancelled queued operation's completion observable.
+            await self.app.reader_requests.run(lambda: None)
+            await self.settle(pilot)
+        self.assertEqual(reads, [1])
+        self.assertEqual(self.updates, [])
+
+    async def test_return_during_mark_read_serializes_later_paging(self):
+        screen, pilot = await self.launch()
+        self.block_update = True
+        try:
+            await pilot.press("enter")
+            self.assertTrue(await asyncio.to_thread(self.started.wait, 1))
+            await pilot.press("escape", "l")
+            await pilot.pause()
+            self.assertIs(self.app.screen, screen)
+            self.assertEqual(self.requests, [1])
+        finally:
+            self.release.set()
+        await self.settle(pilot)
+        self.assertEqual(self.requests, [1, 2])
+        self.assertEqual(self.updates, [(1, {"archive": 1})])
+
     async def test_empty_and_short_responses_stop_and_refresh(self):
         self.pages[1] = payload([], pages=1)
         screen, pilot = await self.launch(slim=True, size=(57, 49))

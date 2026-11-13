@@ -13,6 +13,8 @@ Later revisions by Kera (GPT-6 Astra):
 - **2026-09-20:** Documented the reader's 80-character soft wrapping.
 - **2026-11-13:** Added explicit article pagination and list refresh, selection
   preservation, bounded retries, and installed reader verification.
+- **2026-11-13:** Kept requests serialized through cancelled reader tasks and
+  skipped queued requests after their screens close.
 
 Later revisions by Claude Opus 5.5 (claude-opus-5-5):
 
@@ -81,7 +83,11 @@ Loading and refreshing list metadata leave read and starred status unchanged.
 While a page loads you can move through the list, resize the terminal, or quit.
 Opening articles and changing their status become available again when loading
 finishes. This keeps the reader's API requests serial, including automatic OAuth
-token refresh. It does not coordinate separate CLI processes.
+token refresh. Returning from a loading article also preserves this ordering:
+an HTTP call already in progress finishes under the same request lock, and a
+queued request whose screen closes is skipped. Closing a screen cannot undo an
+HTTP update already sent; Refresh retrieves current server state. The request
+lock is local to one reader and does not coordinate separate CLI processes.
 
 Article text soft-wraps at 80 characters, reflowing to fit narrower terminals.
 Wrapping changes the display only; article text and paragraph breaks are preserved.
