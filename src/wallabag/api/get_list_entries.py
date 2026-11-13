@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+# Revised by Kera (GPT-6 Astra): 2026-11-13 (optional page selection).
 
 from enum import Enum
 
-from wallabag.api.api import Api, ApiMethod
+from wallabag.api.api import Api, ApiMethod, ValueException
 
 
 class Params(Enum):
@@ -11,6 +12,7 @@ class Params(Enum):
     FILTER_STARRED = "filter_starred"
     OLDEST = "oldest"
     TAGS = "tags"
+    PAGE = "page"
 
 
 class GetListEntries(Api):
@@ -24,6 +26,7 @@ class GetListEntries(Api):
         STARRED = "starred"
         TAGS = "tags"
         DETAIL = "detail"
+        PAGE = "page"
 
     class ApiValues():
         class ORDER(Enum):
@@ -51,6 +54,12 @@ class GetListEntries(Api):
             ApiParams.PER_PAGE.value: count,
             ApiParams.DETAIL.value: ApiValues.DETAIL.META.value
         }
+
+        if Params.PAGE in self.params:
+            page = self.params[Params.PAGE]
+            if type(page) is not int or page < 1:
+                raise ValueException("Page must be a positive integer")
+            api_params[ApiParams.PAGE.value] = page
 
         if Params.OLDEST in self.params and self.params[Params.OLDEST]:
             api_params[ApiParams.ORDER.value] = ApiValues.ORDER.ASC.value

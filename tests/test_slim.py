@@ -1,4 +1,5 @@
 # Kera (GPT-6.1 Sol). Created 2026-11-11.
+# Revised by Kera (GPT-6 Astra): 2026-11-13 (pytest/unittest import compatibility).
 """Narrow article table, scrollable metadata, state and launcher routing."""
 import os
 from pathlib import Path
@@ -11,7 +12,10 @@ from unittest.mock import patch
 from textual.containers import ScrollableContainer
 from textual.widgets import DataTable, Static
 from wallabag.tui import ArticleListScreen, ArticleViewScreen, WallabagTUI
-from test_repair import article, configure
+if __package__:
+    from .test_repair import article, configure
+else:
+    from test_repair import article, configure
 
 
 class SlimTests(unittest.IsolatedAsyncioTestCase):

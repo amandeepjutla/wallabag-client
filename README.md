@@ -11,6 +11,8 @@ Later revisions by Kera (GPT-6 Astra):
 
 - **2026-09-12:** Revised the README for Pixi.
 - **2026-09-20:** Documented the reader's 80-character soft wrapping.
+- **2026-11-13:** Added explicit article pagination and list refresh, selection
+  preservation, bounded retries, and installed reader verification.
 
 Later revisions by Claude Opus 5.5 (claude-opus-5-5):
 
@@ -54,10 +56,32 @@ deleting entries, plus annotations and opening entries in a browser.
 | Enter / O | Read the selected article |
 | R | Toggle read status |
 | S | Toggle starred status |
+| L | Load the next page of older articles |
+| Shift+R | Refresh the list from the newest articles |
 | Page Up / Page Down | Scroll article text |
 | Home / End | Jump to the beginning or end |
 | Q / Escape | Return from an article |
 | Q | Quit from the article list |
+
+The reader initially loads up to **100 articles**, newest first. **L** loads one
+additional page and keeps your selection and scroll position. The status line
+shows how many articles are loaded and the server's total when available. A
+failed page keeps the current list; press **L** to retry. Repeated presses while
+loading issue one request.
+
+**Shift+R** replaces the loaded list with the newest first page. It keeps the
+selected article when that article is still on the first page; otherwise it
+selects the first result. A failed refresh preserves the old list. Refresh is
+useful after articles are added or removed by another client: page boundaries
+can move between requests, so duplicates are removed but a browsing session
+is not a fixed snapshot of the server. A page with no new articles stops further
+paging until a refresh.
+
+Loading and refreshing list metadata leave read and starred status unchanged.
+While a page loads you can move through the list, resize the terminal, or quit.
+Opening articles and changing their status become available again when loading
+finishes. This keeps the reader's API requests serial, including automatic OAuth
+token refresh. It does not coordinate separate CLI processes.
 
 Article text soft-wraps at 80 characters, reflowing to fit narrower terminals.
 Wrapping changes the display only; article text and paragraph breaks are preserved.

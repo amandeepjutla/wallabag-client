@@ -3,6 +3,7 @@
 # Created: 2026-09-11
 # Revised by Claude Opus 5.5 (claude-opus-5-5): 2026-10-06 (light and dark appearance)
 # Revised by Kera (GPT-6.1 Sol): 2026-11-11 (57-column slim layout)
+# Revised by Kera (GPT-6 Astra): 2026-11-13 (paged article loading and refresh)
 
 import asyncio
 import os
@@ -27,6 +28,7 @@ from wallabag.api.update_entry import UpdateEntry, Params as UpdateEntryParams
 from wallabag.export.export_factory import ExportFactory
 from wallabag.format_type import ScreenType
 from wallabag.commands.show import ShowCommandParams
+from wallabag.reader_paging import EntryPage, PAGE_SIZE, parse_page
 
 # Light and dark. The `appearance` command (~/Dropbox/scripts/_macos) writes
 # one word, "light" or "dark", to this file; a missing file means dark. The
@@ -49,6 +51,19 @@ DAY_THEME = Theme(
     surface="#ffffff", panel="#e9ecf0", primary="#3a6399", secondary="#186d73", accent="#a34f12",
     warning="#796000", error="#b02324", success="#356d3b")
 APP_THEMES = {"dark": "textual-dark", "light": DAY_THEME.name}
+
+
+def load_article_page(config: Configs, page: int) -> EntryPage:
+    response = GetListEntries(config, {
+        ListEntriesParams.COUNT: PAGE_SIZE,
+        ListEntriesParams.PAGE: page,
+        ListEntriesParams.FILTER_READ: None,
+        ListEntriesParams.FILTER_STARRED: None,
+        ListEntriesParams.OLDEST: False,
+        ListEntriesParams.TAGS: None,
+    }).request()
+    # Page numbers stay on the configured API; response links are never followed.
+    return parse_page(response.response, page)
 
 
 class ArticleTable(DataTable):
@@ -87,14 +102,20 @@ class ArticleListScreen(Screen):
         Binding("o", "select_article", "Open Article", show=False),
         Binding("r", "toggle_read", "Toggle Read"),
         Binding("s", "toggle_star", "Toggle Star"),
+        Binding("l", "load_more", "Load More"),
+        Binding("R", "refresh_list", "Refresh"),
         Binding("q", "quit", "Quit"),
     ]
 
-    def __init__(self, config: Configs, entries: List[Entry]):
+    def __init__(self, config: Configs, entries: List[Entry], *,
+                 next_page: Optional[int] = None, total: Optional[int] = None):
         super().__init__()
         self.config = config
         self.entries = entries
         self._updating = False
+        self._loading = False
+        self.next_page = next_page
+        self.total = total
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -102,7 +123,7 @@ class ArticleListScreen(Screen):
             yield ArticleTable(id="articles_table", cursor_type="row")
             yield Label("", id="status_label", markup=False)
         yield Footer()
-        yield Static("Enter Read  r Read/unread  s Star  q Quit", classes="slim-help", markup=False)
+        yield Static("Enter Read  l More  R Refresh  r Read  s Star  q Quit", classes="slim-help", markup=False)
 
     def on_mount(self) -> None:
         self.set_class(self.app.slim, "slim")
@@ -114,7 +135,14 @@ class ArticleListScreen(Screen):
         if not self.app.slim:
             table.add_column("Tags", key="tags", width=10)
         table.add_column("Time", key="time", width=5)
-        for entry in self.entries:
+        self._append_rows(self.entries)
+        self._show_list_status()
+        table.focus()
+        table.call_after_refresh(table.fit_title_column)
+
+    def _append_rows(self, entries: List[Entry]) -> None:
+        table = self.query_one(DataTable)
+        for entry in entries:
             cells = [self._get_status_chars(entry), Text(entry.title, no_wrap=True, overflow="ellipsis")]
             if not self.app.slim:
                 cells.insert(0, str(entry.entry_id))
@@ -124,10 +152,68 @@ class ArticleListScreen(Screen):
                 *cells,
                 key=str(entry.entry_id),
             )
-        status = (f"{len(self.entries)} articles · N unread  R read  * starred" if self.app.slim
-                  else f"{len(self.entries)} articles. N = unread; R = read; * = starred.")
-        self._show_status(status if self.entries else "No articles found.")
-        table.focus()
+
+    def _list_summary(self) -> str:
+        if not self.entries:
+            return "No articles found. R Refresh"
+        count = f"{len(self.entries):,}"
+        if self.total is not None:
+            count += f" of {self.total:,}"
+        continuation = "L More" if self.next_page is not None else "R Refresh"
+        return f"{count} articles loaded · {continuation}"
+
+    def _show_list_status(self) -> None:
+        self._show_status(self._list_summary() + "\nN unread  R read  * starred")
+
+    def action_load_more(self) -> None:
+        if self.next_page is not None and not self._updating:
+            self._load_page(refresh=False)
+
+    def action_refresh_list(self) -> None:
+        if not self._updating:
+            self._load_page(refresh=True)
+
+    @work(group="paging")
+    async def _load_page(self, *, refresh: bool) -> None:
+        if self._loading or self._updating:
+            return
+        page_number = 1 if refresh else self.next_page
+        if page_number is None:
+            return
+        # Keep this reader's network actions serial: the existing OAuth helper
+        # can refresh and save credentials while creating any API request.
+        self._loading = True
+        self._show_status("Refreshing articles…" if refresh else "Loading more articles…")
+        try:
+            page = await asyncio.to_thread(load_article_page, self.config, page_number)
+        except Exception as error:
+            retry = "R" if refresh else "L"
+            self._show_status(f"Could not load articles: {error}\n{self._list_summary()} · {retry} Retry")
+            return
+        finally:
+            self._loading = False
+        table = self.query_one(DataTable)
+        if refresh:
+            selected = self._selected_entry()
+            selected_id = str(selected.entry_id) if selected is not None else None
+            self.entries[:] = page.entries
+            table.clear()
+            self._append_rows(self.entries)
+            row = next((i for i, entry in enumerate(self.entries) if str(entry.entry_id) == selected_id), 0)
+            if self.entries:
+                table.move_cursor(row=row, animate=False)
+            self.next_page, self.total = page.next_page, page.total
+        else:
+            known = {str(entry.entry_id) for entry in self.entries}
+            fresh = [entry for entry in page.entries if str(entry.entry_id) not in known]
+            self.entries.extend(fresh)
+            self._append_rows(fresh)
+            self.next_page, self.total = page.next_page, page.total
+            if not fresh:
+                self.next_page = None
+                self._show_status(f"No new articles returned. R Refresh\n{len(self.entries):,} articles retained.")
+                return
+        self._show_list_status()
         table.call_after_refresh(table.fit_title_column)
 
     def _get_status_chars(self, entry: Entry) -> str:
@@ -148,7 +234,7 @@ class ArticleListScreen(Screen):
 
     def action_select_article(self) -> None:
         entry = self._selected_entry()
-        if entry and not self._updating:
+        if entry and not self._updating and not self._loading:
             self.app.push_screen(ArticleViewScreen(self.config, entry))
 
     def action_toggle_read(self) -> None:
@@ -160,7 +246,7 @@ class ArticleListScreen(Screen):
     @work
     async def _toggle_status(self, parameter, attribute: str) -> None:
         entry = self._selected_entry()
-        if entry is None or self._updating:
+        if entry is None or self._updating or self._loading:
             return
         self._updating = True
         new_value = not getattr(entry, attribute)
@@ -344,16 +430,9 @@ class WallabagTUI(App):
     @work
     async def _load_articles(self) -> None:
         try:
-            api = GetListEntries(self.config, {
-                ListEntriesParams.COUNT: 100,
-                ListEntriesParams.FILTER_READ: None,
-                ListEntriesParams.FILTER_STARRED: None,
-                ListEntriesParams.OLDEST: False,
-                ListEntriesParams.TAGS: None,
-            })
-            response = await asyncio.to_thread(api.request)
-            self.entries = Entry.create_list(response.response['_embedded']['items'])
-            self.push_screen(ArticleListScreen(self.config, self.entries))
+            page = await asyncio.to_thread(load_article_page, self.config, 1)
+            self.entries = page.entries
+            self.push_screen(ArticleListScreen(self.config, self.entries, next_page=page.next_page, total=page.total))
         except Exception as error:
             self.exit(return_code=1, message=Text(f"Error loading articles: {error}"))
 
